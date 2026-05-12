@@ -68,6 +68,8 @@ button { font-family: inherit; padding: 6px 12px; font-size: 12px; background: t
 button:hover { background: var(--bg-secondary); }
 button:active { transform: scale(0.98); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
+.lb-link { font-family: inherit; padding: 6px 12px; font-size: 12px; background: transparent; border: 0.5px solid var(--border-secondary); border-radius: var(--radius-md); cursor: pointer; color: var(--text-primary); transition: background 0.1s; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.lb-link:hover { background: var(--bg-secondary); }
 
 .bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 16px; }
 .lb-card { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 10px 12px; }
@@ -158,6 +160,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     <div class="actions-sm">
       <span class="status syncing" id="sync-status"><span class="dot"></span>Loading...</span>
       <button onclick="manualRefresh()">↻ Refresh</button>
+      <a class="lb-link" href="student_leaderboard_v2.html" target="_blank" rel="noopener">📺 Open leaderboard</a>
     </div>
   </div>
 
