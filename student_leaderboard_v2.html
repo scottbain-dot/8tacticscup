@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tactics Cup — Leaderboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Bebas+Neue&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #0a0a14;
+  color: #fff;
+  min-height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(83, 74, 183, 0.15), transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(186, 117, 23, 0.12), transparent 50%),
+    linear-gradient(180deg, #0a0a14 0%, #15152a 100%);
+  z-index: -1;
+}
+
+.stage {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  padding: 24px 36px;
+  gap: 16px;
+}
+
+.header { display: flex; justify-content: space-between; align-items: center; }
+
+.title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 56px;
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 60px rgba(255, 215, 0, 0.3);
+  line-height: 1;
+}
+
+.title .trophy {
+  -webkit-text-fill-color: initial;
+  margin-right: 12px;
+  display: inline-block;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+.subtitle { font-size: 14px; color: rgba(255,255,255,0.5); letter-spacing: 2px; text-transform: uppercase; font-weight: 500; margin-top: 4px; }
+
+.live-tag { display: flex; align-items: center; gap: 10px; background: rgba(255, 71, 71, 0.15); padding: 8px 16px; border-radius: 100px; border: 1px solid rgba(255, 71, 71, 0.3); }
+.live-tag.offline { background: rgba(150, 150, 150, 0.15); border-color: rgba(150, 150, 150, 0.3); }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff4747; animation: pulse 1.5s infinite; }
+.live-tag.offline .live-dot { background: #888; animation: none; }
+@keyframes pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255,71,71,0.7); } 50% { opacity: 0.6; box-shadow: 0 0 0 12px rgba(255,71,71,0); } }
+.live-text { font-size: 12px; letter-spacing: 2px; font-weight: 700; text-transform: uppercase; color: #ff7777; }
+.live-tag.offline .live-text { color: #aaa; }
+
+.main { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; min-height: 0; }
+
+.rankings { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px 28px; display: flex; flex-direction: column; }
+
+.section-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; color: rgba(255,255,255,0.6); margin-bottom: 16px; }
+
+.rank-list { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+
+.rank-row { display: grid; grid-template-columns: 60px 1fr auto auto; align-items: center; gap: 16px; padding: 12px 18px; background: rgba(255,255,255,0.04); border-radius: 14px; border: 1px solid rgba(255,255,255,0.06); transition: all 0.5s; position: relative; overflow: hidden; }
+
+.rank-row.rank-1 { background: linear-gradient(90deg, rgba(255,215,0,0.15) 0%, rgba(255,215,0,0.05) 100%); border-color: rgba(255,215,0,0.3); transform: scale(1.02); }
+
+.rank-row.rank-1::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 0%, rgba(255,215,0,0.1) 50%, transparent 100%); animation: shimmer 3s infinite; }
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+.rank-row.rank-2 { background: linear-gradient(90deg, rgba(200,200,210,0.1), rgba(200,200,210,0.03)); }
+.rank-row.rank-3 { background: linear-gradient(90deg, rgba(205,127,50,0.12), rgba(205,127,50,0.04)); }
+
+.rank-number { font-family: 'Bebas Neue', sans-serif; font-size: 44px; line-height: 1; color: rgba(255,255,255,0.4); text-align: center; }
+.rank-row.rank-1 .rank-number { color: #FFD700; font-size: 50px; }
+.rank-row.rank-2 .rank-number { color: #C0C0C8; }
+.rank-row.rank-3 .rank-number { color: #CD7F32; }
+
+.class-info .name { font-size: 26px; font-weight: 700; letter-spacing: 0.5px; }
+.class-info .teacher { font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 1px; text-transform: uppercase; }
+
+.score-breakdown { text-align: right; font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 1px; text-transform: uppercase; }
+.score-breakdown .num { color: rgba(255,255,255,0.7); font-weight: 700; }
+
+.score-total { font-family: 'Bebas Neue', sans-serif; font-size: 48px; line-height: 1; font-weight: 400; color: #fff; min-width: 90px; text-align: right; }
+.rank-row.rank-1 .score-total { color: #FFD700; font-size: 54px; text-shadow: 0 0 30px rgba(255,215,0,0.5); }
+
+.right-col { display: grid; grid-template-rows: 1fr auto; gap: 24px; min-height: 0; }
+
+.rivalries { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px 28px; }
+.rivalry-list { display: flex; flex-direction: column; gap: 12px; }
+.rivalry { background: rgba(255,255,255,0.04); border-radius: 14px; padding: 14px 16px; border: 1px solid rgba(255,255,255,0.06); }
+.rivalry-head { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.rivalry-matchup { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 14px; }
+.rivalry-side { display: flex; flex-direction: column; align-items: center; position: relative; }
+.rivalry-side .cls-name { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+.rivalry-side .cls-score { font-family: 'Bebas Neue', sans-serif; font-size: 36px; line-height: 1; color: rgba(255,255,255,0.85); }
+.rivalry-side.winning .cls-score { color: #4ade80; text-shadow: 0 0 20px rgba(74,222,128,0.4); }
+.rivalry-side.winning .cls-name::before { content: '▲ '; color: #4ade80; font-size: 11px; }
+.rivalry-vs { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: rgba(255,255,255,0.3); letter-spacing: 2px; }
+.rivalry-margin { font-size: 11px; text-align: center; margin-top: 6px; color: rgba(255,255,255,0.4); letter-spacing: 1px; text-transform: uppercase; }
+.rivalry-margin .lead { color: #4ade80; font-weight: 700; }
+.rivalry-margin.tied { color: #fbbf24; font-weight: 500; }
+
+.ticker { background: rgba(0,0,0,0.4); border-top: 2px solid rgba(255,215,0,0.3); padding: 14px 20px; display: flex; align-items: center; gap: 24px; overflow: hidden; position: relative; height: 56px; }
+.ticker-label { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 3px; color: #FFD700; flex-shrink: 0; padding-right: 16px; border-right: 1px solid rgba(255,255,255,0.1); }
+.ticker-content { display: flex; gap: 36px; animation: scroll 60s linear infinite; white-space: nowrap; font-size: 15px; }
+.ticker-item { display: inline-flex; align-items: center; gap: 8px; }
+.ticker-item .award-name { text-transform: uppercase; letter-spacing: 1px; font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 500; }
+.ticker-item .team-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; background: rgba(255,255,255,0.08); border-radius: 100px; font-size: 13px; font-weight: 500; }
+.team-pill .dot { width: 8px; height: 8px; border-radius: 50%; }
+.ticker-item .class-tag { color: rgba(255,255,255,0.7); font-size: 13px; }
+.ticker-sep { color: rgba(255,255,255,0.2); }
+@keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+@keyframes scoreFlash { 0% { background-color: rgba(74,222,128,0.4); transform: scale(1.05); } 100% { background-color: transparent; transform: scale(1); } }
+.flash { animation: scoreFlash 1.5s ease-out; }
+
+.config-warn { position: fixed; bottom: 10px; left: 10px; right: 10px; background: rgba(186, 117, 23, 0.9); color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 12px; z-index: 1000; }
+.config-warn.hidden { display: none; }
+.config-warn code { background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 3px; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <div class="header">
+    <div>
+      <div class="title"><span class="trophy">🏆</span>Tactics Cup</div>
+      <div class="subtitle">Grade 8 PE · 6 classes · 9 lessons</div>
+    </div>
+    <div class="live-tag" id="live-tag">
+      <span class="live-dot"></span>
+      <span class="live-text" id="live-text">Live</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="rankings">
+      <div class="section-title">Standings</div>
+      <div class="rank-list" id="rank-list"></div>
+    </div>
+
+    <div class="right-col">
+      <div class="rivalries">
+        <div class="section-title">Pair Rivalries</div>
+        <div class="rivalry-list" id="rivalry-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ticker">
+    <div class="ticker-label">Recent Awards</div>
+    <div class="ticker-content" id="ticker-content"></div>
+  </div>
+
+</div>
+
+<div class="config-warn hidden" id="config-warn">
+  Backend not configured. Paste your Apps Script URL into the <code>API_URL</code> variable at the top of the &lt;script&gt; block. Showing sample data.
+</div>
+
+<script>
+// ============================================================
+// CONFIGURATION — paste your Apps Script Web App URL here
+// (use the same URL as the teacher dashboard)
+// ============================================================
+const API_URL = '';  // e.g. 'https://script.google.com/macros/s/AKfycb.../exec'
+
+// Refresh interval in ms (default: 30 seconds)
+const REFRESH_INTERVAL = 30000;
+// ============================================================
+
+const CLASSES = [
+  { id: '8(5A)', teacher: 'Teacher 1', pair: '8(5B)' },
+  { id: '8(5B)', teacher: 'Teacher 1', pair: '8(5A)' },
+  { id: '8(6A)', teacher: 'Teacher 2', pair: '8(6B)' },
+  { id: '8(6B)', teacher: 'Teacher 2', pair: '8(6A)' },
+  { id: '8(56A)', teacher: 'Teacher 3', pair: '8(56C)' },
+  { id: '8(56C)', teacher: 'Teacher 4', pair: '8(56A)' },
+];
+const PAIRS = [['8(5A)', '8(5B)'], ['8(6A)', '8(6B)'], ['8(56A)', '8(56C)']];
+const TEAMS = {
+  Y: { name: 'Yellow', color: '#EF9F27' },
+  R: { name: 'Red',    color: '#E24B4A' },
+  B: { name: 'Blue',   color: '#378ADD' },
+  G: { name: 'Green',  color: '#97C459' },
+};
+const SCHEDULE = {
+  '8(5A)':  [{date:'May 18'}, {date:'May 22'}, {date:'May 27'}, {date:'May 29'}, {date:'Jun 05'}, {date:'Jun 09'}, {date:'Jun 11'}, {date:'Jun 17'}, {date:'Jun 19'}],
+  '8(5B)':  [{date:'May 20'}, {date:'May 22'}, {date:'May 27'}, {date:'Jun 02'}, {date:'Jun 05'}, {date:'Jun 09'}, {date:'Jun 15'}, {date:'Jun 17'}, {date:'Jun 19'}],
+  '8(6A)':  [{date:'May 18'}, {date:'May 22'}, {date:'May 26'}, {date:'May 29'}, {date:'Jun 05'}, {date:'Jun 08'}, {date:'Jun 11'}, {date:'Jun 17'}, {date:'Jun 18'}],
+  '8(6B)':  [{date:'May 19'}, {date:'May 22'}, {date:'May 26'}, {date:'Jun 01'}, {date:'Jun 05'}, {date:'Jun 08'}, {date:'Jun 12'}, {date:'Jun 17'}, {date:'Jun 18'}],
+  '8(56A)': [{date:'May 20'}, {date:'May 26'}, {date:'May 27'}, {date:'Jun 02'}, {date:'Jun 08'}, {date:'Jun 09'}, {date:'Jun 15'}, {date:'Jun 18'}, {date:'Jun 19'}],
+  '8(56C)': [{date:'May 19'}, {date:'May 26'}, {date:'May 27'}, {date:'Jun 01'}, {date:'Jun 08'}, {date:'Jun 09'}, {date:'Jun 12'}, {date:'Jun 18'}, {date:'Jun 19'}],
+};
+
+// Sample data shown when no backend is configured
+const SAMPLE_DATA = {
+  '8(5A)__1': { teams: {Y:{p:2,w:2}, R:{p:2,w:1}, B:{p:3,w:2}, G:{p:3,w:1}}, spirit: 'R', tactical: 'B', ap: ['Y','G'] },
+  '8(5A)__2': { teams: {Y:{p:3,w:1}, R:{p:3,w:2}, B:{p:2,w:1}, G:{p:2,w:0}}, spirit: 'B', tactical: 'R', ap: ['R'] },
+  '8(5A)__3': { teams: {Y:{p:4,w:3}, R:{p:4,w:2}, B:{p:3,w:2}, G:{p:3,w:1}}, spirit: 'Y', tactical: 'Y', ap: ['Y','B'] },
+  '8(5B)__1': { teams: {Y:{p:2,w:1}, R:{p:2,w:1}, B:{p:2,w:0}, G:{p:2,w:1}}, spirit: 'G', tactical: null, ap: ['G'] },
+  '8(5B)__2': { teams: {Y:{p:3,w:1}, R:{p:3,w:1}, B:{p:3,w:2}, G:{p:3,w:0}}, spirit: 'B', tactical: 'B', ap: ['B','R'] },
+  '8(6A)__1': { teams: {Y:{p:2,w:1}, R:{p:2,w:1}, B:{p:2,w:1}, G:{p:2,w:0}}, spirit: 'Y', tactical: 'R', ap: ['Y'] },
+  '8(6A)__2': { teams: {Y:{p:3,w:2}, R:{p:3,w:1}, B:{p:3,w:1}, G:{p:3,w:2}}, spirit: 'G', tactical: 'G', ap: ['G','Y'] },
+  '8(56A)__1': { teams: {Y:{p:3,w:2}, R:{p:3,w:2}, B:{p:3,w:1}, G:{p:3,w:2}}, spirit: 'R', tactical: 'Y', ap: ['R','Y'] },
+};
+
+const HAS_BACKEND = !!API_URL && API_URL.startsWith('https://');
+
+let DATA = HAS_BACKEND ? {} : SAMPLE_DATA;
+let previousTotals = {};
+
+// ============================================================
+// Backend fetch
+// ============================================================
+async function fetchFromBackend() {
+  if (!HAS_BACKEND) return;
+  try {
+    const r = await fetch(API_URL);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const json = await r.json();
+    if (json.error) throw new Error(json.error);
+    DATA = json.data || {};
+    setLive(true);
+  } catch (e) {
+    setLive(false, e.message);
+    console.error(e);
+  }
+}
+
+function setLive(ok, msg) {
+  const tag = document.getElementById('live-tag');
+  const text = document.getElementById('live-text');
+  if (!HAS_BACKEND) {
+    tag.classList.add('offline');
+    text.textContent = 'Sample';
+  } else if (ok) {
+    tag.classList.remove('offline');
+    text.textContent = 'Live';
+  } else {
+    tag.classList.add('offline');
+    text.textContent = 'Offline';
+  }
+}
+
+// ============================================================
+// Score helpers
+// ============================================================
+const key = (c, L) => `${c}__${L}`;
+const emptyL = () => ({ teams: {Y:{p:0,w:0}, R:{p:0,w:0}, B:{p:0,w:0}, G:{p:0,w:0}}, spirit: null, tactical: null, ap: [] });
+const getL = (c, L) => DATA[key(c, L)] || emptyL();
+
+function gamePts(l) {
+  let p=0, w=0;
+  ['Y','R','B','G'].forEach(t => { p += l.teams[t]?.p||0; w += l.teams[t]?.w||0; });
+  if (p === 0) return 0;
+  return Math.round((w/p)*100)/10;
+}
+function awardPts(l) {
+  let pts = 0;
+  if (l.spirit) pts += 5;
+  if (l.tactical) pts += 5;
+  pts += (l.ap?.length||0) * 5;
+  return pts;
+}
+function lessonTotal(l) { return Math.round((gamePts(l) + awardPts(l)) * 10) / 10; }
+function classTotal(c) { let t=0; for (let L=1; L<=9; L++) t += lessonTotal(getL(c, L)); return Math.round(t*10)/10; }
+function classGame(c) { let t=0; for (let L=1; L<=9; L++) t += gamePts(getL(c, L)); return Math.round(t*10)/10; }
+function classAwd(c) { let t=0; for (let L=1; L<=9; L++) t += awardPts(getL(c, L)); return t; }
+
+function renderRankings() {
+  const rows = CLASSES.map(c => ({
+    ...c,
+    total: classTotal(c.id),
+    game: classGame(c.id),
+    award: classAwd(c.id),
+  })).sort((a,b) => b.total - a.total);
+
+  const list = document.getElementById('rank-list');
+  list.innerHTML = '';
+  rows.forEach((r, i) => {
+    const rank = i + 1;
+    const prevTotal = previousTotals[r.id] || 0;
+    const changed = prevTotal !== r.total && prevTotal > 0;
+    list.innerHTML += `
+      <div class="rank-row rank-${rank} ${changed ? 'flash' : ''}">
+        <div class="rank-number">${rank}</div>
+        <div class="class-info">
+          <div class="name">${r.id}</div>
+          <div class="teacher">${r.teacher}</div>
+        </div>
+        <div class="score-breakdown">
+          <div>Games <span class="num">${r.game.toFixed(1)}</span></div>
+          <div>Awards <span class="num">${r.award}</span></div>
+        </div>
+        <div class="score-total">${r.total.toFixed(1)}</div>
+      </div>`;
+    previousTotals[r.id] = r.total;
+  });
+}
+
+function renderRivalries() {
+  const list = document.getElementById('rivalry-list');
+  list.innerHTML = '';
+  PAIRS.forEach(([a, b]) => {
+    const ta = classTotal(a);
+    const tb = classTotal(b);
+    const aWin = ta > tb;
+    const bWin = tb > ta;
+    const tied = ta === tb;
+    const margin = Math.abs(Math.round((ta - tb) * 10) / 10);
+    const leader = aWin ? a : (bWin ? b : null);
+
+    let marginHtml;
+    if (tied && ta > 0) marginHtml = `<div class="rivalry-margin tied">⚡ Tied at ${ta.toFixed(1)}</div>`;
+    else if (tied) marginHtml = `<div class="rivalry-margin">No scores yet</div>`;
+    else marginHtml = `<div class="rivalry-margin"><span class="lead">${leader}</span> leads by <span class="lead">${margin.toFixed(1)}</span></div>`;
+
+    list.innerHTML += `
+      <div class="rivalry">
+        <div class="rivalry-head">
+          <span>Rivalry</span>
+          <span>${a} vs ${b}</span>
+        </div>
+        <div class="rivalry-matchup">
+          <div class="rivalry-side ${aWin ? 'winning' : ''}">
+            <div class="cls-name">${a}</div>
+            <div class="cls-score">${ta.toFixed(1)}</div>
+          </div>
+          <div class="rivalry-vs">VS</div>
+          <div class="rivalry-side ${bWin ? 'winning' : ''}">
+            <div class="cls-name">${b}</div>
+            <div class="cls-score">${tb.toFixed(1)}</div>
+          </div>
+        </div>
+        ${marginHtml}
+      </div>`;
+  });
+}
+
+function renderTicker() {
+  const items = [];
+  CLASSES.forEach(c => {
+    for (let L = 1; L <= 9; L++) {
+      const l = getL(c.id, L);
+      const dateLabel = SCHEDULE[c.id][L-1]?.date || '';
+      if (l.spirit) items.push({ award: 'Spirit', team: l.spirit, cls: c.id, date: dateLabel, lesson: L });
+      if (l.tactical) items.push({ award: 'Tactical', team: l.tactical, cls: c.id, date: dateLabel, lesson: L });
+      (l.ap || []).forEach(team => {
+        items.push({ award: 'AP', team, cls: c.id, date: dateLabel, lesson: L });
+      });
+    }
+  });
+  items.sort((a, b) => b.lesson - a.lesson);
+
+  const buildItem = (item) => {
+    const team = TEAMS[item.team];
+    return `<span class="ticker-item">
+      <span class="award-name">${item.award}</span>
+      <span class="team-pill"><span class="dot" style="background: ${team.color}"></span>${team.name}</span>
+      <span class="class-tag">${item.cls}</span>
+      <span style="color: rgba(255,255,255,0.3); font-size: 11px;">${item.date}</span>
+    </span><span class="ticker-sep">•</span>`;
+  };
+
+  const html = items.map(buildItem).join('') + items.map(buildItem).join('');
+  document.getElementById('ticker-content').innerHTML = html || '<span style="color: rgba(255,255,255,0.4)">No awards yet</span>';
+}
+
+function renderAll() {
+  renderRankings();
+  renderRivalries();
+  renderTicker();
+}
+
+// ============================================================
+// Boot
+// ============================================================
+(async () => {
+  if (!HAS_BACKEND) {
+    document.getElementById('config-warn').classList.remove('hidden');
+    setLive(false);
+  }
+  await fetchFromBackend();
+  renderAll();
+
+  setInterval(async () => {
+    await fetchFromBackend();
+    renderAll();
+  }, REFRESH_INTERVAL);
+})();
+</script>
+
+</body>
+</html>

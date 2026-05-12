@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tactics Cup — Teacher Dashboard</title>
+<style>
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f4ef;
+  --bg-tertiary: #ebe9e1;
+  --bg-info: #E6F1FB;
+  --bg-success: #E1F5EE;
+  --bg-warning: #FAEEDA;
+  --bg-danger: #FCEBEB;
+  --text-primary: #1a1a18;
+  --text-secondary: #5F5E5A;
+  --text-tertiary: #888780;
+  --text-info: #0C447C;
+  --text-success: #085041;
+  --text-warning: #854F0B;
+  --text-danger: #791F1F;
+  --border: rgba(0,0,0,0.12);
+  --border-secondary: rgba(0,0,0,0.2);
+  --border-info: #378ADD;
+  --highlight: #FAEEDA;
+  --highlight-text: #854F0B;
+  --highlight-dark: #633806;
+  --parallel: #534AB7;
+  --parallel-bg: #EEEDFE;
+  --parallel-text: #3C3489;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 20px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.app { max-width: 1400px; margin: 0 auto; background: var(--bg-primary); border-radius: var(--radius-lg); padding: 22px 26px; }
+h1 { font-size: 22px; font-weight: 500; margin: 0 0 4px; }
+.subtitle { color: var(--text-secondary); font-size: 13px; margin: 0 0 18px; }
+
+.config-banner { background: var(--bg-warning); color: var(--text-warning); padding: 10px 14px; border-radius: var(--radius-md); margin-bottom: 14px; font-size: 13px; }
+.config-banner code { background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+.config-banner.hidden { display: none; }
+
+.status { padding: 6px 12px; border-radius: var(--radius-md); font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
+.status.ok { background: var(--bg-success); color: var(--text-success); }
+.status.error { background: var(--bg-danger); color: var(--text-danger); }
+.status.syncing { background: var(--bg-info); color: var(--text-info); }
+.status .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.status.syncing .dot { animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+.legend { display: flex; gap: 14px; font-size: 11px; color: var(--text-tertiary); align-items: center; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.legend-bar { display: inline-block; width: 10px; height: 10px; background: var(--parallel); border-radius: 2px; }
+.actions-sm { display: flex; gap: 6px; align-items: center; }
+
+button { font-family: inherit; padding: 6px 12px; font-size: 12px; background: transparent; border: 0.5px solid var(--border-secondary); border-radius: var(--radius-md); cursor: pointer; color: var(--text-primary); transition: background 0.1s; }
+button:hover { background: var(--bg-secondary); }
+button:active { transform: scale(0.98); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 16px; }
+.lb-card { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 10px 12px; }
+.lb-card.first { background: var(--highlight); }
+.lb-rank { font-size: 10px; color: var(--text-tertiary); font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
+.lb-card.first .lb-rank { color: var(--highlight-text); }
+.lb-class { font-size: 15px; font-weight: 500; margin: 2px 0; }
+.lb-card.first .lb-class { color: var(--highlight-dark); }
+.lb-teacher { font-size: 11px; color: var(--text-tertiary); margin-bottom: 4px; }
+.lb-total { font-size: 20px; font-weight: 500; color: var(--text-info); }
+.lb-card.first .lb-total { color: var(--highlight-text); }
+.lb-mini { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; }
+
+.grid-wrap { background: var(--bg-primary); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow-x: auto; }
+.grid { display: grid; min-width: 900px; }
+.grid > div { padding: 8px 5px; font-size: 12px; border-right: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); text-align: center; }
+.gh { background: var(--bg-secondary); font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; }
+.gh.class-col { text-align: left; padding-left: 14px; }
+.gh .blk { font-size: 9px; opacity: 0.7; margin-top: 2px; font-weight: 400; }
+.cls-cell { background: var(--bg-secondary); cursor: default; text-align: left; padding: 9px 14px; }
+.cls-cell .nm { font-weight: 500; font-size: 13px; }
+.cls-cell .tc { font-size: 10px; color: var(--text-tertiary); }
+.score-cell { cursor: pointer; transition: background 0.1s; position: relative; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.score-cell:hover:not(.active) { background: var(--bg-secondary); }
+.score-cell.active { background: var(--bg-info); }
+.score-cell .val { font-size: 14px; font-weight: 500; }
+.score-cell.empty .val { color: var(--text-tertiary); font-weight: 400; }
+.score-cell .dateLbl { position: absolute; top: 3px; left: 6px; font-size: 9px; color: var(--text-tertiary); font-weight: 500; }
+.score-cell .periodLbl { position: absolute; bottom: 3px; right: 6px; font-size: 8px; color: var(--text-tertiary); }
+.score-cell.active .val { color: var(--text-info); }
+.score-cell.parallel { box-shadow: inset 3px 0 0 var(--parallel), inset -3px 0 0 var(--parallel); }
+.tot-cell { background: var(--highlight); cursor: default; }
+.tot-cell .val { color: var(--highlight-text); font-size: 15px; }
+
+.editor { margin-top: 16px; background: var(--bg-primary); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 18px 22px; }
+.editor.hidden { display: none; }
+.editor-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 0.5px solid var(--border); }
+.editor-title { font-size: 17px; font-weight: 500; }
+.editor-sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.parallel-tag { display: inline-block; background: var(--parallel-bg); color: var(--parallel-text); padding: 2px 9px; border-radius: 12px; font-size: 11px; font-weight: 500; margin-left: 8px; vertical-align: 2px; }
+.editor-total { font-size: 24px; font-weight: 500; color: var(--text-info); text-align: right; }
+.editor-total .max { font-size: 13px; color: var(--text-tertiary); font-weight: 400; }
+.editor-body { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.zone-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin: 0 0 9px; font-weight: 500; }
+.team-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.team-tile { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 9px 11px; }
+.team-tile-head { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+.team-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.counter-row { display: flex; align-items: center; justify-content: space-between; margin: 3px 0; font-size: 12px; }
+.counter-row label { color: var(--text-secondary); }
+.counter { display: flex; align-items: center; gap: 4px; }
+.counter button { width: 22px; height: 22px; padding: 0; font-size: 13px; line-height: 1; display: flex; align-items: center; justify-content: center; min-width: 22px; }
+.counter .val { min-width: 18px; text-align: center; font-weight: 500; font-size: 13px; }
+.award-block { margin-bottom: 12px; }
+.award-head { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+.award-row { display: flex; gap: 4px; flex-wrap: wrap; }
+.aw-btn { padding: 5px 10px; font-size: 12px; border-radius: var(--radius-md); background: var(--bg-primary); border: 0.5px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.1s; color: var(--text-primary); }
+.aw-btn:hover { border-color: var(--border-secondary); }
+.aw-btn.on { background: var(--bg-info); border-color: var(--border-info); color: var(--text-info); font-weight: 500; }
+.aw-btn.clear { color: var(--text-tertiary); }
+.aw-btn .ad { width: 7px; height: 7px; border-radius: 50%; }
+.actions { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 0.5px solid var(--border); }
+.actions-right { display: flex; gap: 8px; }
+.toast { padding: 6px 12px; background: var(--bg-success); color: var(--text-success); border-radius: var(--radius-md); font-size: 12px; opacity: 0; transition: opacity 0.2s; }
+.toast.show { opacity: 1; }
+.formula-note { font-size: 11px; color: var(--text-tertiary); margin-top: 10px; }
+.formula-note strong { color: var(--text-secondary); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <h1>🏆 Tactics Cup — Teacher Dashboard</h1>
+  <p class="subtitle">Mon May 18 – Fri Jun 19, 2026 · 6 classes · 9 lessons each · 4 teachers</p>
+
+  <div class="config-banner" id="config-banner">
+    ⚠️ Backend not configured. Open this file in a text editor and paste your Apps Script URL into the <code>API_URL</code> variable at the top of the &lt;script&gt; block. Until configured, scores save only to this browser.
+  </div>
+
+  <div class="toolbar">
+    <div class="legend">
+      <span class="legend-item"><span class="legend-dot" style="background: #EF9F27;"></span>Yellow</span>
+      <span class="legend-item"><span class="legend-dot" style="background: #E24B4A;"></span>Red</span>
+      <span class="legend-item"><span class="legend-dot" style="background: #378ADD;"></span>Blue</span>
+      <span class="legend-item"><span class="legend-dot" style="background: #97C459;"></span>Green</span>
+      <span class="legend-item" style="margin-left: 8px; padding-left: 12px; border-left: 0.5px solid var(--border);"><span class="legend-bar"></span>Parallel</span>
+    </div>
+    <div class="actions-sm">
+      <span class="status syncing" id="sync-status"><span class="dot"></span>Loading...</span>
+      <button onclick="manualRefresh()">↻ Refresh</button>
+      <button onclick="clearAllData()">Clear all</button>
+    </div>
+  </div>
+
+  <div class="bar" id="leaderboard"></div>
+
+  <div class="grid-wrap">
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="editor hidden" id="editor"></div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURATION — paste your Apps Script Web App URL here
+// ============================================================
+const API_URL = '';  // e.g. 'https://script.google.com/macros/s/AKfycb.../exec'
+
+// ============================================================
+
+const CLASSES = [
+  { id: '8(5A)', teacher: 'T1', pair: '8(5B)' },
+  { id: '8(5B)', teacher: 'T1', pair: '8(5A)' },
+  { id: '8(6A)', teacher: 'T2', pair: '8(6B)' },
+  { id: '8(6B)', teacher: 'T2', pair: '8(6A)' },
+  { id: '8(56A)', teacher: 'T3', pair: '8(56C)' },
+  { id: '8(56C)', teacher: 'T4', pair: '8(56A)' },
+];
+const TEAMS = [
+  { id: 'Y', name: 'Yellow', color: '#EF9F27' },
+  { id: 'R', name: 'Red',    color: '#E24B4A' },
+  { id: 'B', name: 'Blue',   color: '#378ADD' },
+  { id: 'G', name: 'Green',  color: '#97C459' },
+];
+const SCHEDULE = {
+  '8(5A)':  [{date:'May 18', day:'G', period:'P2', solo:true},  {date:'May 22', day:'C', period:'P1', solo:false}, {date:'May 27', day:'E', period:'P6', solo:false}, {date:'May 29', day:'G', period:'P2', solo:true},  {date:'Jun 05', day:'C', period:'P1', solo:false}, {date:'Jun 09', day:'E', period:'P6', solo:false}, {date:'Jun 11', day:'G', period:'P2', solo:true},  {date:'Jun 17', day:'C', period:'P1', solo:false}, {date:'Jun 19', day:'E', period:'P6', solo:false}],
+  '8(5B)':  [{date:'May 20', day:'A', period:'P5', solo:true},  {date:'May 22', day:'C', period:'P1', solo:false}, {date:'May 27', day:'E', period:'P6', solo:false}, {date:'Jun 02', day:'A', period:'P5', solo:true},  {date:'Jun 05', day:'C', period:'P1', solo:false}, {date:'Jun 09', day:'E', period:'P6', solo:false}, {date:'Jun 15', day:'A', period:'P5', solo:true},  {date:'Jun 17', day:'C', period:'P1', solo:false}, {date:'Jun 19', day:'E', period:'P6', solo:false}],
+  '8(6A)':  [{date:'May 18', day:'G', period:'P1', solo:true},  {date:'May 22', day:'C', period:'P2', solo:false}, {date:'May 26', day:'D', period:'P4a',solo:false}, {date:'May 29', day:'G', period:'P1', solo:true},  {date:'Jun 05', day:'C', period:'P2', solo:false}, {date:'Jun 08', day:'D', period:'P4a',solo:false}, {date:'Jun 11', day:'G', period:'P1', solo:true},  {date:'Jun 17', day:'C', period:'P2', solo:false}, {date:'Jun 18', day:'D', period:'P4a',solo:false}],
+  '8(6B)':  [{date:'May 19', day:'H', period:'P3', solo:true},  {date:'May 22', day:'C', period:'P2', solo:false}, {date:'May 26', day:'D', period:'P4a',solo:false}, {date:'Jun 01', day:'H', period:'P3', solo:true},  {date:'Jun 05', day:'C', period:'P2', solo:false}, {date:'Jun 08', day:'D', period:'P4a',solo:false}, {date:'Jun 12', day:'H', period:'P3', solo:true},  {date:'Jun 17', day:'C', period:'P2', solo:false}, {date:'Jun 18', day:'D', period:'P4a',solo:false}],
+  '8(56A)': [{date:'May 20', day:'A', period:'P6', solo:true},  {date:'May 26', day:'D', period:'P3', solo:false}, {date:'May 27', day:'E', period:'P5', solo:false}, {date:'Jun 02', day:'A', period:'P6', solo:true},  {date:'Jun 08', day:'D', period:'P3', solo:false}, {date:'Jun 09', day:'E', period:'P5', solo:false}, {date:'Jun 15', day:'A', period:'P6', solo:true},  {date:'Jun 18', day:'D', period:'P3', solo:false}, {date:'Jun 19', day:'E', period:'P5', solo:false}],
+  '8(56C)': [{date:'May 19', day:'H', period:'P4a',solo:true},  {date:'May 26', day:'D', period:'P3', solo:false}, {date:'May 27', day:'E', period:'P5', solo:false}, {date:'Jun 01', day:'H', period:'P4a',solo:true},  {date:'Jun 08', day:'D', period:'P3', solo:false}, {date:'Jun 09', day:'E', period:'P5', solo:false}, {date:'Jun 12', day:'H', period:'P4a',solo:true},  {date:'Jun 18', day:'D', period:'P3', solo:false}, {date:'Jun 19', day:'E', period:'P5', solo:false}],
+};
+const BLOCK_OF = L => L <= 3 ? 'Block 1' : L <= 6 ? 'Block 2' : 'Block 3';
+const BLOCK_NAME = { 'Block 1': 'Attack & Defend', 'Block 2': 'Eliminate & Protect', 'Block 3': 'Outwit Opponent' };
+
+let DATA = {};
+let active = null;
+const HAS_BACKEND = !!API_URL && API_URL.startsWith('https://');
+
+// ============================================================
+// Backend sync — debounced, batched, fire-and-forget with retry
+// ============================================================
+
+// Status indicator states: idle (✓ Saved), pending (Saving…), error (Unsaved)
+function setStatus(state, text) {
+  const el = document.getElementById('sync-status');
+  el.className = 'status ' + state;
+  el.innerHTML = `<span class="dot"></span>${text}`;
+}
+
+// Pending changes queue: keys whose latest local state has not yet been confirmed saved
+const dirtyKeys = new Set();
+// Whether a flush is currently in flight
+let flushInFlight = false;
+// Pending flush timer (debouncer)
+let flushTimer = null;
+// Consecutive failure count for backoff
+let failureCount = 0;
+
+const DEBOUNCE_MS = 500;
+const MAX_RETRIES = 3;
+
+function persistLocal() {
+  try { localStorage.setItem('tactics_cup_v4', JSON.stringify(DATA)); } catch (e) {}
+}
+
+// Schedule a debounced flush. Called after every mutation.
+function scheduleFlush() {
+  persistLocal();  // always keep a local copy
+  if (flushTimer) clearTimeout(flushTimer);
+  flushTimer = setTimeout(flushNow, DEBOUNCE_MS);
+}
+
+// Drain the dirty queue with one batched request.
+async function flushNow() {
+  flushTimer = null;
+  if (!HAS_BACKEND) { return; }
+  if (dirtyKeys.size === 0) {
+    if (!flushInFlight) setStatus('ok', 'Saved');
+    return;
+  }
+  if (flushInFlight) return;  // another flush will pick up new dirty keys
+  flushInFlight = true;
+  setStatus('syncing', 'Saving…');
+
+  // Snapshot the dirty keys + their current data
+  const snapshot = Array.from(dirtyKeys).map(k => ({ key: k, lesson: DATA[k] || emptyL() }));
+  // Remove from dirty set optimistically; if save fails we re-add
+  const snapshotKeys = snapshot.map(s => s.key);
+  snapshotKeys.forEach(k => dirtyKeys.delete(k));
+
+  try {
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'updateMany', items: snapshot }),
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const json = await r.json();
+    if (json.error) throw new Error(json.error);
+    failureCount = 0;
+    flushInFlight = false;
+    // If more changes were queued while we were saving, flush them next
+    if (dirtyKeys.size > 0) {
+      scheduleFlush();
+    } else {
+      setStatus('ok', 'Saved');
+    }
+  } catch (e) {
+    // Re-add the failed keys to the dirty set (only if they're not now newer)
+    snapshotKeys.forEach(k => dirtyKeys.add(k));
+    flushInFlight = false;
+    failureCount++;
+    console.error('Save failed:', e);
+    if (failureCount <= MAX_RETRIES) {
+      const backoffMs = Math.min(4000, 1000 * Math.pow(2, failureCount - 1));
+      setStatus('syncing', `Retrying in ${Math.round(backoffMs/1000)}s…`);
+      setTimeout(flushNow, backoffMs);
+    } else {
+      setStatus('error', `Unsaved — ${dirtyKeys.size} change(s) pending`);
+    }
+  }
+}
+
+// Mark a key dirty + schedule a save. Used by mutations.
+function markDirty(k) {
+  dirtyKeys.add(k);
+  // Show pending status immediately, but don't actually call the network yet
+  setStatus('syncing', 'Saving…');
+  scheduleFlush();
+}
+
+// Manual retry button — also used after errors to force a flush
+async function manualRefresh() {
+  if (dirtyKeys.size > 0) {
+    // If there are unsaved changes, flush them first (don't lose local edits)
+    failureCount = 0;
+    await flushNow();
+  }
+  await fetchFromBackend();
+  renderAll();
+}
+
+async function fetchFromBackend() {
+  if (!HAS_BACKEND) {
+    try { DATA = JSON.parse(localStorage.getItem('tactics_cup_v4') || '{}'); } catch (e) { DATA = {}; }
+    setStatus('error', 'Local only (no backend)');
+    return;
+  }
+  try {
+    setStatus('syncing', 'Loading…');
+    const r = await fetch(API_URL);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const json = await r.json();
+    if (json.error) throw new Error(json.error);
+    // Merge: keep any locally-dirty keys (they have unsaved newer state)
+    const remote = json.data || {};
+    for (const k of dirtyKeys) {
+      remote[k] = DATA[k];
+    }
+    DATA = remote;
+    setStatus(dirtyKeys.size > 0 ? 'syncing' : 'ok', dirtyKeys.size > 0 ? 'Saving…' : 'Saved');
+  } catch (e) {
+    setStatus('error', 'Load failed: ' + e.message);
+    console.error(e);
+  }
+}
+
+// Clear single lesson — fires immediately, not debounced (it's a destructive action)
+async function clearLessonBackend(k) {
+  if (!HAS_BACKEND) { persistLocal(); return; }
+  dirtyKeys.delete(k);  // clearing supersedes any pending update
+  try {
+    setStatus('syncing', 'Clearing…');
+    await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'clear', key: k }),
+    });
+    setStatus('ok', 'Saved');
+  } catch (e) {
+    setStatus('error', 'Clear failed: ' + e.message);
+  }
+}
+
+async function clearAllBackend() {
+  if (!HAS_BACKEND) { persistLocal(); return; }
+  dirtyKeys.clear();
+  try {
+    setStatus('syncing', 'Clearing all…');
+    await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'clearAll' }),
+    });
+    setStatus('ok', 'Saved');
+  } catch (e) {
+    setStatus('error', 'Clear failed: ' + e.message);
+  }
+}
+
+// ============================================================
+// Score helpers
+// ============================================================
+const key = (c, L) => `${c}__${L}`;
+const emptyL = () => ({ teams: {Y:{p:0,w:0}, R:{p:0,w:0}, B:{p:0,w:0}, G:{p:0,w:0}}, spirit: null, tactical: null, ap: [] });
+const getL = (c, L) => DATA[key(c, L)] || emptyL();
+
+function gamePts(l) {
+  let p=0, w=0;
+  ['Y','R','B','G'].forEach(t => { p += l.teams[t]?.p||0; w += l.teams[t]?.w||0; });
+  if (p === 0) return 0;
+  return Math.round((w/p)*100)/10;
+}
+function awardPts(l) {
+  let pts = 0;
+  if (l.spirit) pts += 5;
+  if (l.tactical) pts += 5;
+  pts += (l.ap?.length||0) * 5;
+  return pts;
+}
+function lessonTotal(l) { return Math.round((gamePts(l) + awardPts(l)) * 10) / 10; }
+function classTotal(c) { let t=0; for (let L=1; L<=9; L++) t += lessonTotal(getL(c, L)); return Math.round(t*10)/10; }
+function classGame(c) { let t=0; for (let L=1; L<=9; L++) t += gamePts(getL(c, L)); return Math.round(t*10)/10; }
+function classAwd(c) { let t=0; for (let L=1; L<=9; L++) t += awardPts(getL(c, L)); return t; }
+function hasData(l) { return ['Y','R','B','G'].some(t => (l.teams[t]?.p||0) > 0) || l.spirit || l.tactical || l.ap?.length; }
+
+// ============================================================
+// Rendering
+// ============================================================
+function renderLeaderboard() {
+  const lb = document.getElementById('leaderboard');
+  const rows = CLASSES.map(c => ({ ...c, total: classTotal(c.id), game: classGame(c.id), award: classAwd(c.id) }))
+    .sort((a,b) => b.total - a.total);
+  lb.innerHTML = '';
+  rows.forEach((r, i) => {
+    const first = (i === 0 && r.total > 0) ? 'first' : '';
+    lb.innerHTML += `<div class="lb-card ${first}"><div class="lb-rank">#${i+1}${first ? ' 🏆' : ''}</div><div class="lb-class">${r.id}</div><div class="lb-teacher">${r.teacher}</div><div class="lb-total">${r.total.toFixed(1)}</div><div class="lb-mini">G ${r.game.toFixed(1)} · A ${r.award}</div></div>`;
+  });
+}
+
+function renderGrid() {
+  const g = document.getElementById('grid');
+  g.style.gridTemplateColumns = `140px repeat(9, 1fr) 80px`;
+  let html = '<div class="gh class-col">Class</div>';
+  for (let L = 1; L <= 9; L++) html += `<div class="gh">L${L}<div class="blk">${BLOCK_OF(L)}</div></div>`;
+  html += '<div class="gh">Total</div>';
+
+  CLASSES.forEach(c => {
+    html += `<div class="cls-cell"><div class="nm">${c.id}</div><div class="tc">${c.teacher} · pair ${c.pair}</div></div>`;
+    for (let L = 1; L <= 9; L++) {
+      const lesson = SCHEDULE[c.id][L-1];
+      const l = getL(c.id, L);
+      const has = hasData(l);
+      const activeCls = (active && active.cls === c.id && active.lesson === L) ? 'active' : '';
+      const empty = has ? '' : 'empty';
+      const par = !lesson.solo ? 'parallel' : '';
+      const score = has ? lessonTotal(l).toFixed(1) : '—';
+      html += `<div class="score-cell ${activeCls} ${empty} ${par}" onclick="openEditor('${c.id}', ${L})" title="${lesson.date} · ${lesson.day} Day · ${lesson.period}"><span class="dateLbl">${lesson.date}</span><span class="val">${score}</span><span class="periodLbl">${lesson.period}</span></div>`;
+    }
+    html += `<div class="score-cell tot-cell"><span class="val">${classTotal(c.id).toFixed(1)}</span></div>`;
+  });
+  g.innerHTML = html;
+}
+
+function openEditor(cls, L) { active = { cls, lesson: L }; renderGrid(); renderEditor(); }
+function closeEditor() { active = null; document.getElementById('editor').classList.add('hidden'); renderGrid(); }
+
+function renderEditor() {
+  const ed = document.getElementById('editor');
+  ed.classList.remove('hidden');
+  const l = getL(active.cls, active.lesson);
+  const cls = CLASSES.find(c => c.id === active.cls);
+  const lesson = SCHEDULE[active.cls][active.lesson - 1];
+  const blockKey = BLOCK_OF(active.lesson);
+  const parallelInfo = !lesson.solo ? `<span class="parallel-tag">⇆ ${cls.pair} same gym</span>` : '';
+
+  let html = `<div class="editor-head"><div><div class="editor-title">${active.cls} · Lesson ${active.lesson}${parallelInfo}</div><div class="editor-sub">${lesson.date}, 2026 · ${lesson.day} Day · ${lesson.period} · ${cls.teacher} · ${blockKey} (${BLOCK_NAME[blockKey]})</div></div><div class="editor-total">${lessonTotal(l).toFixed(1)} <span class="max">/ 30</span></div></div><div class="editor-body"><div><div class="zone-label">Games (per team)</div><div class="team-grid">`;
+
+  TEAMS.forEach(T => {
+    const t = l.teams[T.id];
+    html += `<div class="team-tile"><div class="team-tile-head"><div class="team-dot" style="background: ${T.color}"></div>${T.name}</div><div class="counter-row"><label>Played</label><div class="counter"><button onclick="adjust('${T.id}','p',-1)">−</button><span class="val">${t.p}</span><button onclick="adjust('${T.id}','p',1)">+</button></div></div><div class="counter-row"><label>Won</label><div class="counter"><button onclick="adjust('${T.id}','w',-1)">−</button><span class="val">${t.w}</span><button onclick="adjust('${T.id}','w',1)">+</button></div></div></div>`;
+  });
+
+  html += `</div><div class="formula-note">Win % × 10 → Game pts: <strong>${gamePts(l)}</strong></div></div><div><div class="zone-label">Awards (optional)</div><div class="award-block"><div class="award-head">⭐ Spirit (+5)</div><div class="award-row">`;
+  TEAMS.forEach(T => html += `<button class="aw-btn ${l.spirit === T.id ? 'on' : ''}" onclick="setAward('spirit','${T.id}')"><span class="ad" style="background: ${T.color}"></span>${T.name}</button>`);
+  html += `<button class="aw-btn clear" onclick="setAward('spirit',null)">none</button></div></div><div class="award-block"><div class="award-head">💡 Tactical (+5)</div><div class="award-row">`;
+  TEAMS.forEach(T => html += `<button class="aw-btn ${l.tactical === T.id ? 'on' : ''}" onclick="setAward('tactical','${T.id}')"><span class="ad" style="background: ${T.color}"></span>${T.name}</button>`);
+  html += `<button class="aw-btn clear" onclick="setAward('tactical',null)">none</button></div></div><div class="award-block"><div class="award-head">🏃 Active Participation (+5 each, max 2)</div><div class="award-row">`;
+  TEAMS.forEach(T => {
+    const on = l.ap?.includes(T.id) ? 'on' : '';
+    html += `<button class="aw-btn ${on}" onclick="toggleAP('${T.id}')"><span class="ad" style="background: ${T.color}"></span>${T.name}</button>`;
+  });
+  html += `</div></div></div></div><div class="actions"><span class="toast" id="ed-toast">Saved</span><div class="actions-right"><button onclick="clearLesson()">Clear lesson</button><button onclick="closeEditor()">Close</button></div></div>`;
+  ed.innerHTML = html;
+}
+
+// ============================================================
+// Mutations — optimistic. UI updates instantly, save flushes 500ms later.
+// ============================================================
+function adjust(teamId, field, delta) {
+  const k = key(active.cls, active.lesson);
+  if (!DATA[k]) DATA[k] = emptyL();
+  const t = DATA[k].teams[teamId];
+  t[field] = Math.max(0, t[field] + delta);
+  if (field === 'p' && t.w > t.p) t.w = t.p;
+  if (field === 'w' && t.w > t.p) t.w = t.p;
+  renderEditor(); renderGrid(); renderLeaderboard();
+  markDirty(k);
+}
+function setAward(field, teamId) {
+  const k = key(active.cls, active.lesson);
+  if (!DATA[k]) DATA[k] = emptyL();
+  DATA[k][field] = teamId;
+  renderEditor(); renderGrid(); renderLeaderboard();
+  markDirty(k);
+}
+function toggleAP(teamId) {
+  const k = key(active.cls, active.lesson);
+  if (!DATA[k]) DATA[k] = emptyL();
+  const ap = DATA[k].ap || [];
+  if (ap.includes(teamId)) DATA[k].ap = ap.filter(t => t !== teamId);
+  else if (ap.length < 2) DATA[k].ap = [...ap, teamId];
+  renderEditor(); renderGrid(); renderLeaderboard();
+  markDirty(k);
+}
+async function clearLesson() {
+  const k = key(active.cls, active.lesson);
+  delete DATA[k];
+  renderEditor(); renderGrid(); renderLeaderboard();
+  await clearLessonBackend(k);
+}
+async function clearAllData() {
+  if (!confirm('Clear ALL scores across all classes? This cannot be undone.')) return;
+  DATA = {};
+  active = null;
+  renderAll();
+  document.getElementById('editor').classList.add('hidden');
+  await clearAllBackend();
+}
+
+function showToast() {
+  const t = document.getElementById('ed-toast');
+  if (!t) return;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1200);
+}
+
+function renderAll() { renderLeaderboard(); renderGrid(); if (active) renderEditor(); }
+
+// Warn before closing tab if there are unsaved changes still pending
+window.addEventListener('beforeunload', (e) => {
+  if (dirtyKeys.size > 0) {
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+});
+
+// ============================================================
+// Boot
+// ============================================================
+(async () => {
+  if (HAS_BACKEND) {
+    document.getElementById('config-banner').classList.add('hidden');
+  }
+  await fetchFromBackend();
+  renderAll();
+})();
+</script>
+
+</body>
+</html>
