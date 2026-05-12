@@ -158,7 +158,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     <div class="actions-sm">
       <span class="status syncing" id="sync-status"><span class="dot"></span>Loading...</span>
       <button onclick="manualRefresh()">↻ Refresh</button>
-      <button onclick="clearAllData()">Clear all</button>
     </div>
   </div>
 
@@ -501,15 +500,6 @@ async function clearLesson() {
   renderEditor(); renderGrid(); renderLeaderboard();
   await clearLessonBackend(k);
 }
-async function clearAllData() {
-  if (!confirm('Clear ALL scores across all classes? This cannot be undone.')) return;
-  DATA = {};
-  active = null;
-  renderAll();
-  document.getElementById('editor').classList.add('hidden');
-  await clearAllBackend();
-}
-
 function showToast() {
   const t = document.getElementById('ed-toast');
   if (!t) return;
