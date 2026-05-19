@@ -96,6 +96,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .score-cell:hover:not(.active) { background: var(--bg-secondary); }
 .score-cell.active { background: var(--bg-info); }
 .score-cell .val { font-size: 14px; font-weight: 500; }
+.score-cell .val .den { font-size: 9px; color: var(--text-tertiary); font-weight: 400; margin-left: 1px; }
 .score-cell.empty .val { color: var(--text-tertiary); font-weight: 400; }
 .score-cell .dateLbl { position: absolute; top: 3px; left: 6px; font-size: 9px; color: var(--text-tertiary); font-weight: 500; }
 .score-cell .periodLbl { position: absolute; bottom: 3px; right: 6px; font-size: 8px; color: var(--text-tertiary); }
@@ -428,7 +429,8 @@ function renderGrid() {
       const activeCls = (active && active.cls === c.id && active.lesson === L) ? 'active' : '';
       const empty = has ? '' : 'empty';
       const par = !lesson.solo ? 'parallel' : '';
-      const score = has ? lessonTotal(l).toFixed(1) : '—';
+      const cap = lesson.solo ? 25 : 30;
+      const score = has ? `${lessonTotal(l).toFixed(1)}<span class="den">/ ${cap}</span>` : '—';
       html += `<div class="score-cell ${activeCls} ${empty} ${par}" onclick="openEditor('${c.id}', ${L})" title="${lesson.date} · ${lesson.day} Day · ${lesson.period}"><span class="dateLbl">${lesson.date}</span><span class="val">${score}</span><span class="periodLbl">${lesson.period}</span></div>`;
     }
     html += `<div class="score-cell tot-cell"><span class="val">${classTotal(c.id).toFixed(1)}</span></div>`;
@@ -447,8 +449,10 @@ function renderEditor() {
   const lesson = SCHEDULE[active.cls][active.lesson - 1];
   const blockKey = BLOCK_OF(active.lesson);
   const parallelInfo = !lesson.solo ? `<span class="parallel-tag">⇆ ${cls.pair} same gym</span>` : '';
+  const cap = lesson.solo ? 25 : 30;
+  const capTip = lesson.solo ? ' title="Solo lessons cap at 25. Intra-class play means game points top out at 5.0 (every game produces one win per two played tallies in the class pool)."' : '';
 
-  let html = `<div class="editor-head"><div><div class="editor-title">${active.cls} · Lesson ${active.lesson}${parallelInfo}</div><div class="editor-sub">${lesson.date}, 2026 · ${lesson.day} Day · ${lesson.period} · ${cls.teacher} · ${blockKey} (${BLOCK_NAME[blockKey]})</div></div><div class="editor-total">${lessonTotal(l).toFixed(1)} <span class="max">/ 30</span></div></div><div class="editor-body"><div><div class="zone-label">Games (per team)</div><div class="team-grid">`;
+  let html = `<div class="editor-head"><div><div class="editor-title">${active.cls} · Lesson ${active.lesson}${parallelInfo}</div><div class="editor-sub">${lesson.date}, 2026 · ${lesson.day} Day · ${lesson.period} · ${cls.teacher} · ${blockKey} (${BLOCK_NAME[blockKey]})</div></div><div class="editor-total">${lessonTotal(l).toFixed(1)} <span class="max"${capTip}>/ ${cap}</span></div></div><div class="editor-body"><div><div class="zone-label">Games (per team)</div><div class="team-grid">`;
 
   TEAMS.forEach(T => {
     const t = l.teams[T.id];
